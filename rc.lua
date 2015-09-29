@@ -80,7 +80,7 @@ layouts =
 tags = {}
 for s = 1, screen.count() do
     -- Each screen has its own tag table.
-    tags[s] = awful.tag({ "Work", "Code", 3, 4, 5, 6, 7, "IM", 9 }, s, layouts[1])
+    tags[s] = awful.tag({ "Code", "Term", "Web", "VBox", 5, 6, 7, "IM", 9 }, s, layouts[0])
 end
 -- }}}
 
@@ -111,7 +111,7 @@ mylauncher = awful.widget.launcher({ image = image(beautiful.awesome_icon),
 kbdwidget = widget({type = "textbox", name = "kbdwidget"})
 kbdwidget.border_width = 1
 kbdwidget.border_color = beautiful.fg_normal
-kbdwidget.text = "<b> Eng </b>"
+kbdwidget.text = "<b> English </b>"
 
 --Load Avg configuration
 obvious.loadavg.set_prefix('<span foreground="#cccccc" font_size="x-large">')
@@ -201,8 +201,8 @@ for s = 1, screen.count() do
         mylayoutbox[s],
         mytextclock,
         obvious.battery(),
-        s == 1 and obvious.loadavg() or nil,
-        s == 2 and mysystray or nil,
+        obvious.loadavg(),
+        mysystray,
         kbdwidget,
         mytasklist[s],
         layout = awful.widget.layout.horizontal.rightleft
@@ -220,6 +220,31 @@ root.buttons(awful.util.table.join(
 
 -- {{{ Key bindings
 globalkeys = awful.util.table.join(
+
+    -- awful.key({ }, "Print", function () awful.util.spawn("scrot -e 'mv $f ~/screenshots/ 2>/dev/null'") end),
+    awful.key({ }, "Print", function () awful.util.spawn("scrot -z -e 'mv $f ~/Screenshots/ 2>/dev/null'") end),
+
+
+    -- Volume Regulation
+    awful.key({ }, "XF86AudioRaiseVolume", function () awful.util.spawn("amixer set Master 5%+") end),
+    awful.key({ }, "XF86AudioLowerVolume", function () awful.util.spawn("amixer set Master 5%-") end),
+    awful.key({ }, "XF86AudioMute", function ()awful.util.spawn("amixer sset Master toggle") end),
+
+    -- Synaptics touchpad toggle
+    awful.key({ }, "#199", function () awful.util.spawn("/usr/local/bin/touchpad_toggle.sh") end),
+
+    -- Brightness function keys
+    awful.key({ }, "XF86MonBrightnessDown", function () awful.util.spawn("xbacklight -dec 10") end),
+    awful.key({ }, "XF86MonBrightnessUp", function () awful.util.spawn("xbacklight -inc 10") end),
+
+    -- Run sublime_text by hotkey
+    awful.key({ modkey,  "Shift"  }, "f1",     awful.util.spawn_with_shell("run_once /opt/sublime_text/sublime_text")       ),
+
+    -- Run google chrome by hotkey
+    awful.key({ modkey,  "Shift"  }, "f2",     awful.util.spawn_with_shell("run_once /usr/bin/google-chrome")       ),
+
+
+    -- Other config options
     awful.key({ modkey,           }, "Left",   awful.tag.viewprev       ),
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
@@ -363,13 +388,13 @@ awful.rules.rules = {
     { rule = { class = "java-lang-Thread" }, properties = { floating = true } },
 
     -- Set Firefox to always map on tags number 2 of screen 1.
-    { rule = { instance = "google-chrome" }, properties = { tag = tags[1][1] } }, 
+    { rule = { instance = "google-chrome" }, properties = { tag = tags[1][1] } },
     { rule = { class    = "Icedove" }, properties = { tag = tags[1][2] } },
-    { rule_any = { class = { "Skype", "Pidgin" } }, properties = { tag = tags[1][8] } }, 
-    { rule = { instance = "nautilus" }, properties = { tag = tags[1][2] } }, 
-    { rule = { instance = "sublime_text" }, properties = { tag = tags[2][1], switchtotag = true } }
+    { rule_any = { class = { "Skype", "Pidgin" } }, properties = { tag = tags[1][8] } },
+    { rule = { instance = "nautilus" }, properties = { tag = tags[1][4] } },
+    { rule = { instance = "sublime_text" }, properties = { tag = tags[1][1], switchtotag = true } }
 }
--- }}} 
+-- }}}
 
 -- {{{ Signals
 -- Signal function to execute when a new client appears.
@@ -405,21 +430,30 @@ awful.util.spawn_with_shell("run_once nm-applet")
 awful.util.spawn_with_shell("run_once dropbox start")
 awful.util.spawn_with_shell("run_once kbdd")
 awful.util.spawn_with_shell("run_once skype")
-awful.util.spawn_with_shell("run_once pidgin")
-awful.util.spawn_with_shell("run_once icedove")
+-- awful.util.spawn_with_shell("run_once pidgin")
+-- awful.util.spawn_with_shell("run_once icedove")
 awful.util.spawn_with_shell("run_once subl")
 
--- Special for KBDD 
+-- Set wallpaper
+-- awful.util.spawn_with_shell("awsetbg -f /home/michael/Pictures/wallpapers-desktops-background-simple-wallpaper-mosaic-shared-xmonad.jpg")
+awful.util.spawn_with_shell("awsetbg -a /usr/share/awesome/wallpapers/wallpapers-desktops-background-simple-wallpaper-mosaic-shared-xmonad.jpg")
+
+
+
+-- Special for KBDD
 dbus.request_name("session", "ru.gentoo.kbdd")
 dbus.add_match("session", "interface='ru.gentoo.kbdd',member='layoutChanged'")
 dbus.add_signal("ru.gentoo.kbdd", function(...)
     local data = {...}
     local layout = data[2]
-    lts = {
-      [0] = "<b>Eng</b>", 
-      [1] = "<b>Рус</b>"
+    local lts = {
+      [0] = "<b>English</b>",
+      [1] = "<b>Russian</b>"
     }
-    kbdwidget.text = " "..lts[layout].." "
+    -- naughty.notify({ preset = naughty.config.presets.notify,
+    --                  title = "Language has been changed",
+    --                  text = " " .. layout .. " " })
+    kbdwidget.text = " ".. lts[layout] .." "
     end
 )
 -- }}}
